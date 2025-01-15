@@ -1,6 +1,0 @@
-dependencies {
-    api project(":auth-client")
-    api 'org.springframework.boot:spring-boot-starter-validation'
-    api files('src/lib/thirdPartyJars/Jwt-Util-1.0-fat.jar')
-    api files('src/lib/thirdPartyJars/cache-service-1.0-fat.jar')
-}
