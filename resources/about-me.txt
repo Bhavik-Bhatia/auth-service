@@ -1,0 +1,9 @@
+1)Build Command for application -
+
+./gradlew clean build
+
+2)Start Command for application -
+${JAVA_HOME}/bin/java -Xms512m -Xmx2g -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/two-factor-service" -jar two-factor-web/build/libs/two-factor-web.war --spring.config.location=resources/application.properties
+
+2)Start Command for application debug -
+${JAVA_HOME}/bin/java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=7000,suspend=n -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/two-factor-service" -jar two-factor-web/build/libs/two-factor-web.war --spring.config.location=resources/application.properties

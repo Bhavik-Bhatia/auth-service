@@ -1,0 +1,8 @@
+rootProject.name = 'two-factor-service'
+include 'two-factor-web'
+include 'two-factor-core'
+include 'two-factor-client'
+include 'auth-client'
+include 'auth-core'
+include 'auth-web'
+
