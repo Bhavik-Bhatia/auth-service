@@ -4,8 +4,15 @@ import com.ab.auth.client.EmailClient;
 import com.ab.auth.constants.AuthConstants;
 import com.ab.auth.dto.LoginUserDTO;
 import com.ab.auth.dto.UserDTO;
+import com.ab.auth.entity.Device;
+import com.ab.auth.entity.User;
+import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.exception.InvalidPasswordException;
 import com.ab.auth.exception.UserNotExistsException;
+import com.ab.auth.helper.GlobalHelper;
+import com.ab.auth.helper.UserHelper;
+import com.ab.auth.repository.UserRepository;
+import com.ab.auth.util.ModelMapperUtil;
 import com.ab.cache_service.service.CacheService;
 import com.ab.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,11 +20,11 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import lombok.AllArgsConstructor;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,19 +39,16 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
+@AllArgsConstructor
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
     private UserHelper userHelper;
 
-    @Autowired
+    private GlobalHelper globalHelper;
+
     private CacheService cacheService;
 
     private final EmailClient emailClient;
@@ -53,15 +57,9 @@ public class UserService {
 
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @Autowired
     private AuthenticationManager authenticationManager;
 
-    private final TwoFactorAuthClient twoFactorAuthClient;
-
-    @Autowired
-    public UserService(EmailClient eClient) {
-        emailClient = eClient;
-    }
+    private final TwoFAService twoFAService;
 
 
     /**
@@ -75,7 +73,7 @@ public class UserService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String userSignUp(UserDTO user, String otp, HttpServletRequest httpServletRequest) {
         LOGGER.debug("Enter in UserService.userSignUp()");
-        String deviceId = userHelper.validateDeviceHeader(httpServletRequest);
+        String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
 
         LOGGER.debug("Performing Validation");
         Set<ConstraintViolation<UserDTO>> violations = validator.validate(user);
@@ -91,7 +89,7 @@ public class UserService {
         Boolean isUserExist = userHelper.isUserExists(user);
         if (isUserExist)
             throw new RuntimeException(AuthConstants.USER_ALREADY_EXISTS_MESSAGE);
-        Boolean response = twoFactorAuthClient.validateTwoFA(user.getEmail(), otp, MailType.VALIDATE_SIGNUP_MAIL);
+        Boolean response = twoFAService.validateOTPTwoFA(user.getEmail(), otp, httpServletRequest, TwoFAType.VALIDATE_SIGNUP);
         if (!response) {
             throw new RuntimeException("2 factor authentication failed, OTP not valid");
         }
@@ -134,7 +132,7 @@ public class UserService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public JSONObject userLogin(LoginUserDTO loginUserDTO, HttpServletRequest httpServletRequest) throws UserNotExistsException, InvalidPasswordException {
         LOGGER.debug("Enter in UserService.userLogin()");
-        String deviceId = userHelper.validateDeviceHeader(httpServletRequest);
+        String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
 
         LOGGER.debug("Performing Validation");
         Set<ConstraintViolation<LoginUserDTO>> violations = validator.validate(loginUserDTO);
@@ -163,7 +161,7 @@ public class UserService {
 //          We check if device ID exists for this user, if not we enter device ID as user logged in with new device.
             if (device == null) {
 //              Send mail as user logged in with new device
-                Map<String, String> prepareSendMailMap = userHelper.prepareSendMailMap(userDTO.getEmail(), MailType.NEW_DEVICE_LOGIN_MAIL);
+                Map<String, String> prepareSendMailMap = globalHelper.prepareSendMailMap(userDTO.getEmail(), TwoFAType.VALIDATE_NEW_DEVICE_LOGIN);
                 prepareSendMailMap.put("text", "Hi " + userDTO.getUserName() + " your account was logged in with new device " + deviceId);
                 emailClient.sendEmail(prepareSendMailMap);
                 Device deviceEntity = ModelMapperUtil.getDeviceEntityFromUserEntity(userEntity, deviceId);
@@ -226,7 +224,7 @@ public class UserService {
      */
     public boolean forgotPassword(String email, HttpServletRequest httpServletRequest) {
         LOGGER.debug("Enter in UserService.forgotPassword()");
-        userHelper.validateDeviceHeader(httpServletRequest);
+        globalHelper.validateDeviceHeader(httpServletRequest);
 
         try {
 //          Check if user exists
@@ -239,7 +237,7 @@ public class UserService {
                     return false;
                 }
             }
-            Boolean result = twoFactorAuthClient.insertOTPViaTwoFA(email, MailType.FORGOT_PASSWORD_MAIL);
+            Boolean result = twoFAService.insertOTPViaTwoFA(email, httpServletRequest, TwoFAType.VALIDATE_FORGOT_PASSWORD);
             LOGGER.debug("Exit in UserService.forgotPassword()");
             return result;
         } catch (Exception e) {
@@ -257,7 +255,7 @@ public class UserService {
     public JSONObject validateOTP(String email, String otp, HttpServletRequest httpServletRequest) {
         LOGGER.debug("Enter in UserService.validateOTP()");
         JSONObject responseJson = new JSONObject();
-        String deviceId = userHelper.validateDeviceHeader(httpServletRequest);
+        String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
         User userEntity = null;
         try {
 //          Check if user exists
@@ -271,7 +269,7 @@ public class UserService {
                     return responseJson;
                 }
             }
-            twoFactorAuthClient.validateTwoFA(email, otp, MailType.FORGOT_PASSWORD_MAIL);
+            twoFAService.validateOTPTwoFA(email, otp, httpServletRequest, TwoFAType.VALIDATE_FORGOT_PASSWORD);
             if (userEntity != null) {
                 LOGGER.debug("OTP valid");
                 Device device = userHelper.getDeviceDetails(userEntity.getUserId(), deviceId);

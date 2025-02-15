@@ -1,8 +1,6 @@
-rootProject.name = 'two-factor-service'
-include 'two-factor-web'
-include 'two-factor-core'
-include 'two-factor-client'
+rootProject.name = 'auth-service'
 include 'auth-client'
 include 'auth-core'
 include 'auth-web'
+include 'auth-dao'
 

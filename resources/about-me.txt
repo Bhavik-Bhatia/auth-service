@@ -2,8 +2,33 @@
 
 ./gradlew clean build
 
-2)Start Command for application -
+2)You also need some prerequisites ->
+
+2.1)Start Redis
+
+sudo redis-server ./redis-04.conf
+
+2.1)Make cluster of 3 nodes atleast(Even if same ports)
+
+sudo redis-cli --cluster create 127.0.0.1:6382 127.0.0.1:6382 127.0.0.1:6382 --cluster-replicas 0
+
+
+3)Start Command for application -
 ${JAVA_HOME}/bin/java -Xms512m -Xmx2g -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/two-factor-service" -jar two-factor-web/build/libs/two-factor-web.war --spring.config.location=resources/application.properties
 
-2)Start Command for application debug -
-${JAVA_HOME}/bin/java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=7000,suspend=n -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/two-factor-service" -jar two-factor-web/build/libs/two-factor-web.war --spring.config.location=resources/application.properties
+3)Start Command for application debug -
+${JAVA_HOME}/bin/java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=7001,suspend=n -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/auth-service" -jar auth-web/build/libs/auth-web.war --spring.config.location=resources/application.properties
+
+4)About Auth service ->
+
+In auth service which connects to user DB will be used for authentication/authorization via spring security. Auth will be basic auth and
+OAuth. Also two factor auth support will be given.
+
+
+Key tech used ->
+
+1)Spring security
+2)Redis
+3)OAuth
+4)Spring boot
+5)Swagger

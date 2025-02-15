@@ -5,7 +5,7 @@ plugins {
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'java-library'
-	group = 'com.ab.two-factor-service'
+	group = 'com.ab.auth-service'
     version = '1.0'
 
     sourceCompatibility = 21
@@ -13,16 +13,14 @@ subprojects {
 
     apply plugin: 'io.spring.dependency-management'
 
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
-    }
-
     repositories {
         mavenCentral()
     }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << "-parameters"  // To preserve args name during compilation which helps in SPEL
+    }
+
 
     dependencyManagement {
         imports {
@@ -32,12 +30,12 @@ subprojects {
     }
 
     dependencies {
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        implementation 'org.springframework.boot:spring-boot-starter-security:' + springSecurityVersion
         compileOnly 'org.projectlombok:lombok:' + lombokVersion
         annotationProcessor 'org.projectlombok:lombok:' + lombokVersion
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation group: 'junit', name: 'junit', version: '4.12'
         testImplementation 'org.mockito:mockito-core:3.12.4'
         implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+        implementation 'org.springframework.boot:spring-boot-starter-security:' + springSecurityVersion
     }
 }

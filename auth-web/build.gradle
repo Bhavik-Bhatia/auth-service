@@ -4,7 +4,7 @@ plugins {
 }
 
 bootWar {
-    archiveFileName = "tasktracker-web.war"
+    archiveFileName = "auth-web.war"
 }
 war {
     enabled = false
@@ -17,5 +17,6 @@ bootRun {
 dependencies {
     api project(":auth-core")
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }

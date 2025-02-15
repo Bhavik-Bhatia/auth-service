@@ -3,6 +3,7 @@ package com.ab.auth.helper;
 import com.ab.cache_service.service.CacheService;
 import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.constants.AuthConstants;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -105,5 +106,17 @@ public class GlobalHelper {
         return map;
     }
 
+    /**
+     * We check if DeviceId is present if not we throw exception. This method is useful for
+     * excluded URIs
+     *
+     * @param httpServletRequest We get deviceHeader from request object
+     */
+    public String validateDeviceHeader(HttpServletRequest httpServletRequest) {
+        String deviceId = httpServletRequest.getHeader("deviceId");
+        if (deviceId == null)
+            throw new RuntimeException("Error occurred: DeviceId not found");
+        return deviceId;
+    }
 
 }
