@@ -139,9 +139,9 @@ public class UserHelper {
      * @param user get email
      * @return Boolean
      */
-    public Boolean isUserExists(UserDTO user) {
+    public Boolean isUserExists(String email) {
         LOGGER.debug("Checking if user already exists");
-        return userRepository.existsByEmail(user.getEmail());
+        return userRepository.existsByEmail(email);
     }
 
 }

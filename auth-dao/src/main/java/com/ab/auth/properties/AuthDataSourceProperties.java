@@ -25,13 +25,13 @@ public class AuthDataSourceProperties {
     @Value("${current.database}")
     private String currentDatabase;
 
-    public static Map<String, String> getJPAProperties(JPAProperties jpaProperties) {
+    public Map<String, String> getJPAProperties(JPAProperties jpaProperties) {
         Map<String, String> properties = new HashMap<>();
         properties.put(AvailableSettings.SHOW_SQL, jpaProperties.getShowSQL());
         properties.put(AvailableSettings.HBM2DDL_AUTO, jpaProperties.getDdlAuto());
         properties.put(AvailableSettings.PHYSICAL_NAMING_STRATEGY, CamelCaseToUnderscoresNamingStrategy.class.getName());
         properties.put(AvailableSettings.IMPLICIT_NAMING_STRATEGY, SpringImplicitNamingStrategy.class.getName());
-        properties.put(AvailableSettings.DIALECT, jpaProperties.getSqlDialect());
+        properties.put(AvailableSettings.DIALECT, getDialect());
         return properties;
     }
 

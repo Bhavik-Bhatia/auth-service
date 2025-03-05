@@ -3,9 +3,12 @@ package com.ab.auth.helper;
 import com.ab.cache_service.service.CacheService;
 import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.constants.AuthConstants;
+import com.ab.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.security.NoSuchAlgorithmException;
@@ -20,10 +23,14 @@ public class GlobalHelper {
 
     private final CacheService cacheService;
 
+    private final JwtUtil jwtUtil;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalHelper.class);
 
-    public GlobalHelper(CacheService service) {
+    @Autowired
+    public GlobalHelper(CacheService service, JwtUtil util) {
         cacheService = service;
+        jwtUtil = util;
     }
 
     /**
@@ -117,6 +124,19 @@ public class GlobalHelper {
         if (deviceId == null)
             throw new RuntimeException("Error occurred: DeviceId not found");
         return deviceId;
+    }
+
+    /**
+     * This method will be used to generate token from microservice name via Hs526 algo and key
+     * hence securing internal microservice calls
+     *
+     * @param serviceName String
+     * @return String
+     */
+    public Map<String, String> generateTokenViaSubjectForRestCall(String serviceName) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateJWTToken(serviceName));
+        return headers;
     }
 
 }

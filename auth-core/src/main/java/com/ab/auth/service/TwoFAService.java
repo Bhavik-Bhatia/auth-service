@@ -1,6 +1,7 @@
 package com.ab.auth.service;
 
 import com.ab.auth.client.EmailClient;
+import com.ab.auth.constants.AuthConstants;
 import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.helper.GlobalHelper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,7 +61,7 @@ public class TwoFAService {
 //          Send mail to user for validating
             Map<String, String> prepareSendMailMap = globalHelper.prepareSendMailMap(email, twoFAType);
             prepareSendMailMap.put("text", String.format("Hi please use this OTP %s to sign up", otp));
-            emailClient.sendEmail(prepareSendMailMap);
+            emailClient.sendEmail(prepareSendMailMap, globalHelper.generateTokenViaSubjectForRestCall(AuthConstants.AUTH_SERVICE_NAME));
         }
 //      Store OTP in cache
         Boolean result = globalHelper.insertTwoFAOTP(otp, email, twoFAType);

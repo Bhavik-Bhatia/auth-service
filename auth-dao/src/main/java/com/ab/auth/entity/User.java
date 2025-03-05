@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "auth_service.user_ms_tbl")
+@Table(name = "auth_service_user_ms_tbl")
 @Getter
 @Setter
 @ToString
@@ -47,6 +47,9 @@ public class User implements Serializable, UserDetails {
 
     @Column(name = "hashed_password")
     private String hashedPassword;
+
+    @Column(name = "auth_provider")
+    private int authProvider;
 
     @Column(name = "created_date", updatable = false)
     @CreatedDate

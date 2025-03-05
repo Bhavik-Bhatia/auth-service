@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "auth_service.device_ms_tbl")
+@Table(name = "auth_service_device_ms_tbl")
 @Getter
 @Setter
 @ToString

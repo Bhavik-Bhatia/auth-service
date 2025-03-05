@@ -32,3 +32,11 @@ Key tech used ->
 3)OAuth
 4)Spring boot
 5)Swagger
+
+5)Oauth URL -> http://localhost:8181/oauth2/authorization/google
+
+6)
+
+Docker container -> sudo docker image -t image:tag .
+
+Docker Compose -> sudo docker-compose -f auth.yaml up

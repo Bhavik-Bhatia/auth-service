@@ -86,7 +86,7 @@ public class UserService {
         }
 
         LOGGER.debug("Checking if user already exists");
-        Boolean isUserExist = userHelper.isUserExists(user);
+        Boolean isUserExist = userHelper.isUserExists(user.getEmail());
         if (isUserExist)
             throw new RuntimeException(AuthConstants.USER_ALREADY_EXISTS_MESSAGE);
         Boolean response = twoFAService.validateOTPTwoFA(user.getEmail(), otp, httpServletRequest, TwoFAType.VALIDATE_SIGNUP);
@@ -98,6 +98,8 @@ public class UserService {
         User userEntity = new User();
         BeanUtils.copyProperties(user, userEntity);
         userEntity.setHashedPassword(passwordEncoder.encode(userEntity.getHashedPassword()));
+//      Setting authentication provider 1 which is for basic auth provided by special characters
+        userEntity.setAuthProvider(1);
 
         LOGGER.debug("Saving user data in DB and Cache");
         User persistedUser = userHelper.insertUserDetails(userEntity);
@@ -163,7 +165,7 @@ public class UserService {
 //              Send mail as user logged in with new device
                 Map<String, String> prepareSendMailMap = globalHelper.prepareSendMailMap(userDTO.getEmail(), TwoFAType.VALIDATE_NEW_DEVICE_LOGIN);
                 prepareSendMailMap.put("text", "Hi " + userDTO.getUserName() + " your account was logged in with new device " + deviceId);
-                emailClient.sendEmail(prepareSendMailMap);
+                emailClient.sendEmail(prepareSendMailMap, globalHelper.generateTokenViaSubjectForRestCall(AuthConstants.AUTH_SERVICE_NAME));
                 Device deviceEntity = ModelMapperUtil.getDeviceEntityFromUserEntity(userEntity, deviceId);
                 userHelper.insertDeviceDetails(deviceEntity);
             }

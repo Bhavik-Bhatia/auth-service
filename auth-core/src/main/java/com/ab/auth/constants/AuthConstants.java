@@ -24,4 +24,5 @@ public interface AuthConstants {
     String AUTH_HEADER = "Authorization";
     String CACHE_USER_DETAILS = "#usd";
     String CACHE_DEVICE_DETAILS = "#udd";
+    String AUTH_SERVICE_NAME = "auth-service";
 }

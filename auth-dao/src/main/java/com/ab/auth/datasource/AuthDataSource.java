@@ -51,7 +51,7 @@ public class AuthDataSource {
     @Bean(name = {"entityManagerFactory"})
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(EntityManagerFactoryBuilder builder, DataSource dataSource) {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        LocalContainerEntityManagerFactoryBean factory = builder.dataSource(dataSource).packages("com.ab.auth.entity").persistenceUnit("auth").properties(AuthDataSourceProperties.getJPAProperties(JPAProperties)).build();
+        LocalContainerEntityManagerFactoryBean factory = builder.dataSource(dataSource).packages("com.ab.auth.entity").persistenceUnit("auth").properties(authDataSourceProperties.getJPAProperties(JPAProperties)).build();
         factory.setJpaVendorAdapter(vendorAdapter);
         LOGGER.debug("AuthDataSource.entityManagerFactory config");
         return factory;

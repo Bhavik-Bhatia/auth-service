@@ -5,6 +5,7 @@ import com.ab.auth.entity.User;
 import com.ab.auth.helper.UserHelper;
 import com.ab.auth.security.filter.AuthenticationFilter;
 import com.ab.auth.security.filter.XSSFilter;
+import com.ab.auth.security.handler.OauthSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -43,8 +44,11 @@ public class SecurityConfig {
     private XSSFilter xssFilter;
     @Autowired
     private UserHelper userHelper;
+    @Autowired
+    private OauthSuccessHandler oauthSuccessHandler;
 
-    String[] Whitelisted_URLS = {"**/twofactor", "**/signup", "**/login", "**/twofactorsignup", "**/api", "/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**", "/v1/api-docs/**", "**/forgot-password", "**/validate-otp", "**/actuator/health"};
+
+    String[] Whitelisted_URLS = {"**/home","**/twofactor", "**/signup", "**/login", "**/twofactorsignup", "**/api", "/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**", "/v1/api-docs/**", "**/forgot-password", "**/validate-otp", "**/actuator/health"};
 
     @Value("${server.host}")
     private String hostName;
@@ -82,9 +86,9 @@ public class SecurityConfig {
                         headersConfigurer.contentSecurityPolicy(
                                 csp -> csp.policyDirectives(String.format("script-src 'self' %s;", hostName))
                         )
-                ).
+                ).oauth2Login(oauth -> oauth.successHandler(oauthSuccessHandler)).
                 sessionManagement(
-                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Allow session for OAuth2
                 );
         return httpSecurity.build();
     }

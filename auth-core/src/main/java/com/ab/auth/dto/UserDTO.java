@@ -32,6 +32,8 @@ public class UserDTO implements Serializable {
     @NotBlank(message = AuthConstants.MOBILE_NUMBER_REQUIRED_MESSAGE)
     private String mobileNumber;
 
+    private int authProvider;
+
     @NotBlank(message = AuthConstants.PASSWORD_REQUIRED_MESSAGE)
     @Size(min = 8, max = 20, message = AuthConstants.PASSWORD_VALIDATION_MESSAGE)
     private String hashedPassword;
