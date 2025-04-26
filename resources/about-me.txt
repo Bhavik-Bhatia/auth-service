@@ -12,6 +12,9 @@ sudo redis-server ./redis-04.conf
 
 sudo redis-cli --cluster create 127.0.0.1:6382 127.0.0.1:6382 127.0.0.1:6382 --cluster-replicas 0
 
+2.2)Check for cluster nodes
+
+redis-cli -p 6380 cluster nodes
 
 3)Start Command for application -
 ${JAVA_HOME}/bin/java -Xms512m -Xmx2g -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/two-factor-service" -jar two-factor-web/build/libs/two-factor-web.war --spring.config.location=resources/application.properties

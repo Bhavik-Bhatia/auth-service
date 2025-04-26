@@ -98,5 +98,12 @@ public class UserResources {
         }
     }
 
+    @GetMapping(value = AuthURI.GET_ALL_USERS_URI, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String[]> getUsers(HttpServletRequest httpServletRequest) {
+        LOGGER.debug("Enter in UserResources.getUsers()");
+        String[] result = userService.getUsers();
+        LOGGER.debug("Exit in UserResources.getUsers() Success");
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 
 }

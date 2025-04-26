@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
-@FeignClient(value = "email", url = "http://bbhatia.asite.com:8080/notification")
+@FeignClient(value = "email", url = "http://notification:8080/notification")
 public interface EmailClient {
 
     @PostMapping(value = "/sendemail", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

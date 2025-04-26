@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -40,15 +39,17 @@ public class SecurityConfig {
 
     @Autowired
     private AuthenticationFilter authenticationFilter;
+
     @Autowired
     private XSSFilter xssFilter;
+
     @Autowired
     private UserHelper userHelper;
+
     @Autowired
     private OauthSuccessHandler oauthSuccessHandler;
 
-
-    String[] Whitelisted_URLS = {"**/home","**/twofactor", "**/signup", "**/login", "**/twofactorsignup", "**/api", "/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**", "/v1/api-docs/**", "**/forgot-password", "**/validate-otp", "**/actuator/health"};
+    String[] Whitelisted_URLS = {"**/home","**/twofactor", "**/signup", "**/login", "**/twofactorsignup", "**/api", "/swagger-ui/**", "/v3/api-docs/**", "/v2/api-docs/**", "/v1/api-docs/**", "**/forgot-password", "**/validate-otp", "/actuator/health"};
 
     @Value("${server.host}")
     private String hostName;
@@ -67,7 +68,8 @@ public class SecurityConfig {
 
     /**
      * Creates Bean of SecurityFilterChain in which we configure XSS filter, Auth Filter, CORS protection
-     * And set Session Management to Stateless hence context holder does not hold authentication object
+     * And set Session Management to Stateless hence context holder does not hold authentication object.
+     * Also, we have configured Oauth success handler.
      *
      * @param httpSecurity HttpSecurity Class
      *                     <p>

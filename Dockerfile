@@ -1,6 +1,9 @@
 # Use OpenJDK 21 base image
 FROM openjdk:21-slim
 
+# Install curl, used because in docker compose I hit an API to check if another service is up that is why curl is needed
+RUN apt-get update && apt-get install -y curl
+
 # Set the working directory inside the container (Path is dynamic will be created inside docker file system)
 WORKDIR /app/auth-service
 
@@ -20,7 +23,7 @@ EXPOSE 7001
 
 
 # Command to run the WAR file with custom java options (debugging and Spring properties)
-CMD ["java", "-Xdebug", "-Xrunjdwp:server=y,transport=dt_socket,address=7001,suspend=n", \
+CMD ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:7001", \
     "-Djava.locale.providers=COMPAT,CLDR", \
     "-Djboss.server.home.dir=/app/auth-service", \
     "-jar", "auth-web.war", \

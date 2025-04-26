@@ -21,6 +21,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -336,5 +337,19 @@ public class UserService {
 
         LOGGER.debug("Exit in UserService.changePassword()");
         return true;
+    }
+
+    /**
+     * Following method gets all users data from DB
+     *
+     * @return String[]
+     */
+    public String[] getUsers() {
+        try {
+            return userHelper.getAllUserEmailDetailsFromDB();
+        } catch (Exception e) {
+            LOGGER.error("ERROR while getting all email details for all users from DB");
+            return Strings.EMPTY_ARRAY;
+        }
     }
 }

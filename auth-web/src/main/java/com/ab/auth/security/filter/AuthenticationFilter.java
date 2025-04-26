@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -37,6 +38,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserHelper userHelper;
 
+    @Value("${services.list}")
+    private String servicesList;
+
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         LOGGER.debug("Enter in AuthenticationFilter.doFilterInternal()");
@@ -45,14 +50,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String deviceId = request.getHeader("DeviceId");
         final String jwtToken;
+        boolean isFromInternalServiceCall = false;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             errorResponse(response, AuthConstants.TOKEN_INVALID);
-            return;
-        }
-
-        if (deviceId == null || deviceId.isBlank()) {
-            errorResponse(response, AuthConstants.DEVICE_ID_REQUIRED_MESSAGE);
             return;
         }
 
@@ -61,15 +62,31 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             errorResponse(response, AuthConstants.TOKEN_EXPIRED);
             return;
         }
+        String subject = String.valueOf(jwtUtil.extractUsername(jwtToken));
+        for (String service : servicesList.split(",")) {
+            if (service.equals(subject)) {
+                isFromInternalServiceCall = true;
+                break;
+            }
+        }
+        if (isFromInternalServiceCall) {
+            LOGGER.debug("Is Internal Service call: Subject/Username from token: " + subject);
+        } else {
+            LOGGER.debug("Going to validate Device information");
+//          Fetching userId from claims checking user logged in with this device if not throwing unidentified device error.
+            Long userId = Long.parseLong(String.valueOf(jwtUtil.extractAllClaims(jwtToken).get("userId")));
+//          Get device details from cache
 
-        LOGGER.debug("Going to validate Device information");
-//      Fetching userId from claims checking user logged in with this device if not throwing unidentified device error.
-        Long userId = Long.parseLong(String.valueOf(jwtUtil.extractAllClaims(jwtToken).get("userId")));
-//      Get device details from cache
-        Device device = userHelper.getDeviceDetails(userId, deviceId);
-        if (device == null) {
-            errorResponse(response, AuthConstants.UNIDENTIFIED_DEVICE);
-            return;
+            if (deviceId == null || deviceId.isBlank()) {
+                errorResponse(response, AuthConstants.DEVICE_ID_REQUIRED_MESSAGE);
+                return;
+            }
+
+            Device device = userHelper.getDeviceDetails(userId, deviceId);
+            if (device == null) {
+                errorResponse(response, AuthConstants.UNIDENTIFIED_DEVICE);
+                return;
+            }
         }
 
         LOGGER.debug("Store in Security Context Holder");

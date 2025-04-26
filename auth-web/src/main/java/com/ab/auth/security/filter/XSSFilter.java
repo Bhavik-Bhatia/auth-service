@@ -37,7 +37,7 @@ public class XSSFilter extends OncePerRequestFilter {
     }
 
     private void validateXSS(String input) throws Exception {
-        if (input != null) {
+        if (input != null && !input.isBlank()) {
             for (int i = 0; i < invalidLiterals.length; i++) {
                 String invalidLiteralMessage = "Invalid characters entered. HTML Tags or javascript is not allowed in request input!";
                 if (input.toLowerCase().contains(invalidLiterals[i].toLowerCase())) {

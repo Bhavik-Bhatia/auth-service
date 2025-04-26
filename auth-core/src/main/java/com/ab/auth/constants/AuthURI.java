@@ -12,4 +12,5 @@ public interface AuthURI {
     String FORGOT_PASSWORD_URI = "/forgot-password";
     String VALIDATE_OTP_URI = "/validate-otp";
     String CHANGE_PASSWORD_URI = "/change-password";
+    String GET_ALL_USERS_URI = "/get-users";
 }

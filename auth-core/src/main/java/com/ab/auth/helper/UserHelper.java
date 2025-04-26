@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import static com.ab.auth.constants.AuthConstants.CACHE_DEVICE_DETAILS;
 import static com.ab.auth.constants.AuthConstants.CACHE_USER_DETAILS;
@@ -64,6 +65,19 @@ public class UserHelper {
         }
         return userEntity;
     }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public String[] getAllUserEmailDetailsFromDB() {
+        String[] userEmails = null;
+        try {
+//          Get user details via db
+            userEmails = userRepository.findAllUsersEmails();
+        } catch (Exception e) {
+            LOGGER.error("Error while getting user details: {}", e.getMessage());
+        }
+        return userEmails;
+    }
+
 
     /**
      * Get device details from cache/DB
