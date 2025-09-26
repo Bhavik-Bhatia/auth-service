@@ -35,6 +35,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+//TODO 2: Whitelisted URLs should be moved to application properties file, Removed from security custimizer and added Filter Chain.
 public class SecurityConfig {
 
     @Autowired

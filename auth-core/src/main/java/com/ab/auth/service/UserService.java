@@ -41,6 +41,8 @@ import java.util.Set;
 
 @Service
 @AllArgsConstructor
+//TODO 3: Authentication should be done via spring security filters and auth manager, we should not be doing authentication in service layer directly.
+// We should remove password encoder from here and use DaoAuthenticationProvider for authentication.
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 

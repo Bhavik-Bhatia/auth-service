@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import static com.ab.auth.constants.AuthConstants.AUTH_HEADER;
 import static com.ab.auth.constants.AuthConstants.USER_SIGNED_UP_SUCCESSFULLY;
 
+//TODO 6: Improve your HTTP Methods like POST, GET, DELETE, PUT. Use them properly as per their standards. Return URI in POST if a new resource is created.
 @RestController
 @RequestMapping(AuthURI.USER_URI)
 @CrossOrigin("*")

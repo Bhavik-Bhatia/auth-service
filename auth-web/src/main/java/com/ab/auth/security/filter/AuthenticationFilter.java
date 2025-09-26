@@ -25,6 +25,8 @@ import java.io.IOException;
  * This is Authentication Filter which authenticates if user is valid, by authenticating JWT Token,
  * Checking for invalid characters for XSS attacks and user device ID
  */
+
+//TODO 1: Check if we can remove this Filter and use spring default filters for authentication & context holder. Make this a JWT filter only.
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);

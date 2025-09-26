@@ -1,6 +1,8 @@
+
+//TODO 4: Optimize gradle, check if mysql and postgresql drivers both are needed.
 dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
-    runtimeOnly 'com.mysql:mysql-connector-j:9.2.0'
+    runtimeOnly "com.mysql:mysql-connector-j:$mysqlConnectorVersion"
 }
 
