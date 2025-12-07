@@ -1,5 +1,7 @@
 package com.ab.auth.security.filter;
 
+import com.ab.auth.exception.AppException;
+import com.ab.auth.exception.ErrorCode;
 import com.ab.auth.security.AuthServiceServletRequestWrapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,7 +44,7 @@ public class XSSFilter extends OncePerRequestFilter {
                 String invalidLiteralMessage = "Invalid characters entered. HTML Tags or javascript is not allowed in request input!";
                 if (input.toLowerCase().contains(invalidLiterals[i].toLowerCase())) {
                     LOGGER.error(invalidLiteralMessage);
-                    throw new Exception(invalidLiteralMessage);
+                    throw new AppException(ErrorCode.XSS_EXCEPTION, invalidLiteralMessage);
                 }
             }
         }

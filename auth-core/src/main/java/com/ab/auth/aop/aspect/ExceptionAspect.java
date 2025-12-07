@@ -1,0 +1,39 @@
+package com.ab.auth.aop.aspect;
+
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+public class ExceptionAspect {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionAspect.class);
+
+    @AfterThrowing(pointcut = "execution(* com.ab.auth..*(..))", throwing = "e")
+    public void afterThrowing(JoinPoint joinPoint, Throwable e) {
+        Object[] objects = joinPoint.getArgs();
+        StringBuilder stringBuilder = new StringBuilder();
+        String traceId = "---";
+        for (Object obj : objects) {
+            stringBuilder.append(obj).append(", ");
+        }
+        if (stringBuilder.isEmpty()) {
+            stringBuilder.append("No Params");
+        }
+//TODO: Add Generic Exception in so you can implement trace ID & Controller Advice for global REST exception handling
+/*
+        if (ex instanceof AppException) {
+            traceId = ((AppException) ex).getTraceId();
+        }
+*/
+        LOGGER.error("ExceptionAspect: Exception has been thrown in the class {} and the method is {}, method args: {}, error message is: {}, trace ID is: {}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName(), stringBuilder, e.getMessage(), traceId, e);
+
+        //TODO: Can be used for metrics purpose with spring actuator for critical exceptions, alerts etc.
+    }
+
+}

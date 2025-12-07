@@ -12,4 +12,5 @@ import lombok.ToString;
 public class ExceptionResponse {
     private String code;
     private String message;
+    private String traceId;
 }

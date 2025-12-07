@@ -1,5 +1,6 @@
 package com.ab.auth.controller;
 
+import com.ab.auth.annotation.Log;
 import com.ab.auth.constants.AuthURI;
 import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.service.TwoFAService;
@@ -28,18 +29,16 @@ public class TwoFAResource {
     }
 
     @PostMapping(value = AuthURI.TWO_FACTOR_VIA_2FA_TYPE_URI, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Log
     public Boolean insertOTPViaTwoFA(@Valid @NotNull @RequestParam String email, @NotNull @RequestParam TwoFAType twoFAType, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in TwoFAResource.insertOTPViaTwoFA()");
         Boolean response = twoFAService.insertOTPViaTwoFA(email, httpServletRequest, twoFAType);
-        LOGGER.debug("Exit in TwoFAResource.insertOTPViaTwoFA()");
         return response;
     }
 
     @PostMapping(value = AuthURI.TWO_FACTOR_VALIDATE_VIA_2FA_TYPE_URI, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Log
     public Boolean validateTwoFA(@Valid @NotNull @RequestParam String email, @Valid @NotNull @RequestParam String otp, @NotNull @RequestParam TwoFAType twoFAType, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in TwoFAResource.validateTwoFA()");
         Boolean response = twoFAService.validateOTPTwoFA(email, otp, httpServletRequest, twoFAType);
-        LOGGER.debug("Exit in TwoFAResource.validateTwoFA()");
         return response;
     }
 

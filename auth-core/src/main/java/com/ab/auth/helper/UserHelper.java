@@ -1,8 +1,11 @@
 package com.ab.auth.helper;
 
+import com.ab.auth.annotation.Log;
 import com.ab.auth.dto.UserDTO;
 import com.ab.auth.entity.Device;
 import com.ab.auth.entity.User;
+import com.ab.auth.exception.AppException;
+import com.ab.auth.exception.ErrorCode;
 import com.ab.auth.repository.DeviceRepository;
 import com.ab.auth.repository.UserRepository;
 import com.ab.cache_service.service.CacheService;
@@ -47,6 +50,7 @@ public class UserHelper {
      * @return
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    @Log
     public User getUserDetails(String email) {
         User userEntity = null;
         try {
@@ -67,6 +71,7 @@ public class UserHelper {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    @Log
     public String[] getAllUserEmailDetailsFromDB() {
         String[] userEmails = null;
         try {
@@ -86,6 +91,7 @@ public class UserHelper {
      * @return
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    @Log
     public Device getDeviceDetails(Long userId, String deviceId) {
         Device deviceEntity = null;
         try {
@@ -111,8 +117,9 @@ public class UserHelper {
      * @param device to get details with
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Device insertDeviceDetails(Device device) {
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Log
+    public Device insertDeviceDetails(Device device) throws AppException {
         Device deviceEntity = null;
         try {
             deviceEntity = deviceRepository.save(device);
@@ -120,8 +127,7 @@ public class UserHelper {
             map.put(device.getUser().getUserId() + CACHE_DEVICE_DETAILS + "#" + deviceEntity.getId(), deviceEntity);
             cacheService.cacheOps(map, CacheService.CacheOperation.INSERT);
         } catch (Exception e) {
-            LOGGER.error("Error while inserting device details: {}", e.getMessage());
-            throw e;
+            throw new AppException(ErrorCode.SAVE_DATA_IN_DB_ERROR, e.getMessage());
         }
         return deviceEntity;
     }
@@ -132,7 +138,8 @@ public class UserHelper {
      * @param user to get details with
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Log
     public User insertUserDetails(User user) {
         User userEntity = null;
         try {
@@ -153,8 +160,8 @@ public class UserHelper {
      * @param user get email
      * @return Boolean
      */
+    @Log
     public Boolean isUserExists(String email) {
-        LOGGER.debug("Checking if user already exists");
         return userRepository.existsByEmail(email);
     }
 

@@ -22,6 +22,10 @@ ${JAVA_HOME}/bin/java -Xms512m -Xmx2g -Djava.locale.providers=COMPAT,CLDR -Djbos
 3)Start Command for application debug -
 ${JAVA_HOME}/bin/java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=7001,suspend=n -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="/home/asite/Documents/auth-service" -jar auth-web/build/libs/auth-web.war --spring.config.location=resources/application.properties
 
+For Windows
+%JAVA_HOME%\bin\java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=7001,suspend=n -Djava.locale.providers=COMPAT,CLDR -Djboss.server.home.dir="D:\auth-service" -jar auth-web/build/libs/auth-web.war --spring.config.location=resources/application.properties
+
+
 4)About Auth service ->
 
 In auth service which connects to user DB will be used for authentication/authorization via spring security. Auth will be basic auth and

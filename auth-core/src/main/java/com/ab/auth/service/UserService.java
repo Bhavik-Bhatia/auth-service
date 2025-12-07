@@ -1,5 +1,7 @@
 package com.ab.auth.service;
 
+import com.ab.auth.actuator.metrics.AuthMetrics;
+import com.ab.auth.annotation.Log;
 import com.ab.auth.client.EmailClient;
 import com.ab.auth.constants.AuthConstants;
 import com.ab.auth.dto.LoginUserDTO;
@@ -7,11 +9,10 @@ import com.ab.auth.dto.UserDTO;
 import com.ab.auth.entity.Device;
 import com.ab.auth.entity.User;
 import com.ab.auth.enums.TwoFAType;
-import com.ab.auth.exception.InvalidPasswordException;
-import com.ab.auth.exception.UserNotExistsException;
+import com.ab.auth.exception.AppException;
+import com.ab.auth.exception.ErrorCode;
 import com.ab.auth.helper.GlobalHelper;
 import com.ab.auth.helper.UserHelper;
-import com.ab.auth.repository.UserRepository;
 import com.ab.auth.util.ModelMapperUtil;
 import com.ab.cache_service.service.CacheService;
 import com.ab.jwt.JwtUtil;
@@ -33,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +66,8 @@ public class UserService {
 
     private final TwoFAService twoFAService;
 
+    private final AuthMetrics authMetrics;
+
 
     /**
      * This is service layer user SIgn Up methods which validates user request data,
@@ -73,9 +77,10 @@ public class UserService {
      * @param user UserDTO
      * @return String
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public String userSignUp(UserDTO user, String otp, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in UserService.userSignUp()");
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+    @Log
+    public String userSignUp(UserDTO user, String otp, HttpServletRequest httpServletRequest) throws AppException {
+//      TODO: Based on UI if they can provide Device details and if yes validate in Security Filter
         String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
 
         LOGGER.debug("Performing Validation");
@@ -91,10 +96,10 @@ public class UserService {
         LOGGER.debug("Checking if user already exists");
         Boolean isUserExist = userHelper.isUserExists(user.getEmail());
         if (isUserExist)
-            throw new RuntimeException(AuthConstants.USER_ALREADY_EXISTS_MESSAGE);
+            throw new AppException(ErrorCode.USER_ALREADY_EXISTS, AuthConstants.USER_ALREADY_EXISTS_MESSAGE);
         Boolean response = twoFAService.validateOTPTwoFA(user.getEmail(), otp, httpServletRequest, TwoFAType.VALIDATE_SIGNUP);
         if (!response) {
-            throw new RuntimeException("2 factor authentication failed, OTP not valid");
+            throw new AppException(ErrorCode.INVALID_OTP, "2 factor authentication failed, OTP not valid");
         }
 
         LOGGER.debug("Encrypt Password");
@@ -113,17 +118,15 @@ public class UserService {
             Device device = ModelMapperUtil.getDeviceEntityFromUserEntity(persistedUser, deviceId);
             persistedDevice = userHelper.insertDeviceDetails(device);
         } else {
-            throw new UserNotExistsException(AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
+            throw new AppException(ErrorCode.USER_NOT_EXISTS, AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
         }
         if (persistedDevice == null) {
-            throw new RuntimeException("Error while saving device details");
+            throw new AppException(ErrorCode.SAVE_DATA_IN_DB_ERROR, "Error while saving device details");
         }
-
+//      Actuator Metrics to track number of signups
+        authMetrics.incrementNumberOfSignUps();
         LOGGER.debug("Generating JWT Token");
-        String jwtToken = jwtUtil.generateJWTToken(userEntity.getEmail(), userEntity.getUserId());
-
-        LOGGER.debug("Exit in UserService.userSignUp()");
-        return jwtToken;
+        return jwtUtil.generateJWTToken(userEntity.getEmail(), userEntity.getUserId());
     }
 
     /**
@@ -135,8 +138,8 @@ public class UserService {
      * @return UserDTO
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public JSONObject userLogin(LoginUserDTO loginUserDTO, HttpServletRequest httpServletRequest) throws UserNotExistsException, InvalidPasswordException {
-        LOGGER.debug("Enter in UserService.userLogin()");
+    @Log
+    public JSONObject userLogin(LoginUserDTO loginUserDTO, HttpServletRequest httpServletRequest) throws AppException {
         String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
 
         LOGGER.debug("Performing Validation");
@@ -157,7 +160,7 @@ public class UserService {
 //          User userEntity = userHelper.getUserDetails(loginUserDTO.getEmail());
             User userEntity = (User) authenticate.getPrincipal();
             if (userEntity == null)
-                throw new UserNotExistsException(AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
+                throw new AppException(ErrorCode.USER_NOT_EXISTS, AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
             UserDTO userDTO = new UserDTO();
             BeanUtils.copyProperties(userEntity, userDTO);
 
@@ -175,15 +178,12 @@ public class UserService {
 
             LOGGER.debug("Generating JWT Token");
             String jwtToken = jwtUtil.generateJWTToken(userDTO.getEmail(), userDTO.getUserId());
-
-            LOGGER.debug("Exit in UserService.userLogin()");
             JSONObject loginJson = new JSONObject();
             loginJson.put("token", jwtToken);
             loginJson.put("isLoginSuccessful", true);
             return loginJson;
         } else {
-            LOGGER.debug("Exception in UserService.userLogin()");
-            throw new InvalidPasswordException(AuthConstants.INVALID_PASSWORD_MESSAGE);
+            throw new AppException(ErrorCode.INVALID_PASSWORD_ERROR, AuthConstants.INVALID_PASSWORD_MESSAGE);
         }
     }
 
@@ -192,8 +192,8 @@ public class UserService {
      *
      * @return JSONObject
      */
-    public JSONObject userMe() throws UserNotExistsException, InvalidPasswordException {
-        LOGGER.debug("Enter in UserService.userMe()");
+    @Log
+    public JSONObject userMe(){
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             JSONObject response = new JSONObject();
@@ -209,11 +209,10 @@ public class UserService {
                         response.put("createdDate", user.getCreatedDate());
                         response.put("updatedDate", user.getUpdatedDate());
                     } else {
-                        throw new UserNotExistsException(AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
+                        throw new AppException(ErrorCode.USER_NOT_EXISTS, AuthConstants.USER_DOES_NOT_EXIST_MESSAGE);
                     }
                 }
             }
-            LOGGER.debug("Exit in UserService.userMe()");
             return response;
         } catch (Exception e) {
             LOGGER.error("Exception in UserService.getMe(), message: {}", e.getMessage());
@@ -227,8 +226,8 @@ public class UserService {
      * @param email to validate user
      * @return success/fail boolean
      */
-    public boolean forgotPassword(String email, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in UserService.forgotPassword()");
+    @Log
+    public boolean forgotPassword(String email, HttpServletRequest httpServletRequest) throws AppException {
         globalHelper.validateDeviceHeader(httpServletRequest);
 
         try {
@@ -243,7 +242,6 @@ public class UserService {
                 }
             }
             Boolean result = twoFAService.insertOTPViaTwoFA(email, httpServletRequest, TwoFAType.VALIDATE_FORGOT_PASSWORD);
-            LOGGER.debug("Exit in UserService.forgotPassword()");
             return result;
         } catch (Exception e) {
             LOGGER.error("Exception in UserService.forgotPassword(), message: {}", e.getMessage());
@@ -257,8 +255,8 @@ public class UserService {
      * @param email to validate user
      * @return success/fail boolean
      */
-    public JSONObject validateOTP(String email, String otp, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in UserService.validateOTP()");
+    @Log
+    public JSONObject validateOTP(String email, String otp, HttpServletRequest httpServletRequest) throws AppException {
         JSONObject responseJson = new JSONObject();
         String deviceId = globalHelper.validateDeviceHeader(httpServletRequest);
         User userEntity = null;
@@ -289,7 +287,7 @@ public class UserService {
                 responseJson.put("token", jwtToken);
                 return responseJson;
             } else {
-                LOGGER.debug("Exit in UserService.validateOTP() OTP invalid");
+                LOGGER.debug("OTP invalid");
                 responseJson.put("isUserAndOTPValidatedAnd", false);
                 return responseJson;
             }
@@ -306,9 +304,8 @@ public class UserService {
      * @param loginUserDTO to get login details and reset password
      * @return success/fail boolean
      */
+    @Log
     public Boolean changePassword(LoginUserDTO loginUserDTO, HttpServletRequest httpServletRequest) {
-        LOGGER.debug("Enter in UserService.changePassword()");
-
         LOGGER.debug("Performing Validation");
         Set<ConstraintViolation<LoginUserDTO>> violations = validator.validate(loginUserDTO);
         if (!violations.isEmpty()) {
@@ -336,8 +333,6 @@ public class UserService {
         if (updatedUser == null) {
             return false;
         }
-
-        LOGGER.debug("Exit in UserService.changePassword()");
         return true;
     }
 

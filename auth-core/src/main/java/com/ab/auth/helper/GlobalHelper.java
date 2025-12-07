@@ -1,5 +1,8 @@
 package com.ab.auth.helper;
 
+import com.ab.auth.annotation.Log;
+import com.ab.auth.exception.AppException;
+import com.ab.auth.exception.ErrorCode;
 import com.ab.cache_service.service.CacheService;
 import com.ab.auth.enums.TwoFAType;
 import com.ab.auth.constants.AuthConstants;
@@ -51,6 +54,7 @@ public class GlobalHelper {
      * @param email cache key
      * @return Boolean
      */
+    @Log
     public Boolean insertTwoFAOTP(String otp, String email, TwoFAType twoFAType) {
         try {
             Map<String, Object> map = new HashMap<>();
@@ -73,6 +77,7 @@ public class GlobalHelper {
      * @param email cache key
      * @return Boolean
      */
+    @Log
     public String getTwoFactorAuthOTP(String email, TwoFAType twoFAType) {
         String otp = null;
         try {
@@ -95,6 +100,7 @@ public class GlobalHelper {
      *
      * @return Map
      */
+    @Log
     public Map<String, String> prepareSendMailMap(String mailTo, TwoFAType twoFAType) {
         Map<String, String> map = new HashMap<>();
         map.put("isMultipart", "false");
@@ -119,10 +125,10 @@ public class GlobalHelper {
      *
      * @param httpServletRequest We get deviceHeader from request object
      */
-    public String validateDeviceHeader(HttpServletRequest httpServletRequest) {
+    public String validateDeviceHeader(HttpServletRequest httpServletRequest) throws AppException {
         String deviceId = httpServletRequest.getHeader("deviceId");
         if (deviceId == null)
-            throw new RuntimeException("Error occurred: DeviceId not found");
+            throw new AppException(ErrorCode.DEVICE_ID_NOT_FOUND, "Error occurred: DeviceId not found");
         return deviceId;
     }
 
@@ -133,6 +139,7 @@ public class GlobalHelper {
      * @param serviceName String
      * @return String
      */
+    @Log
     public Map<String, String> generateTokenViaSubjectForRestCall(String serviceName) {
         Map<String, String> headers = new HashMap<>();
         headers.put(HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtil.generateJWTToken(serviceName));

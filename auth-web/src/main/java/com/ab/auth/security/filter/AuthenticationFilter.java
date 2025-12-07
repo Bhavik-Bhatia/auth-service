@@ -1,7 +1,10 @@
 package com.ab.auth.security.filter;
 
+import com.ab.auth.annotation.Log;
 import com.ab.auth.constants.AuthConstants;
 import com.ab.auth.entity.Device;
+import com.ab.auth.exception.AppException;
+import com.ab.auth.exception.ErrorCode;
 import com.ab.auth.helper.UserHelper;
 import com.ab.auth.repository.DeviceRepository;
 import com.ab.jwt.JwtUtil;
@@ -9,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +48,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private String servicesList;
 
 
+    @SneakyThrows
     @Override
+    @Log
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        LOGGER.debug("Enter in AuthenticationFilter.doFilterInternal()");
 //      todo: Invalidate token if user soft deletes details.
         LOGGER.debug("Validating JWT Tokens and Device ID");
         final String authHeader = request.getHeader("Authorization");
@@ -94,17 +99,16 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         LOGGER.debug("Store in Security Context Holder");
         setSecurityContextHolder(jwtToken, request);
 
-        LOGGER.debug("Exit from AuthenticationFilter.doFilterInternal()");
         filterChain.doFilter(request, response);
     }
 
-    private void errorResponse(HttpServletResponse response, String message) {
+    private void errorResponse(HttpServletResponse response, String message) throws AppException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         try {
             response.getWriter().write("{ \"error\": \"" + message + "\" }");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppException(ErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }
 

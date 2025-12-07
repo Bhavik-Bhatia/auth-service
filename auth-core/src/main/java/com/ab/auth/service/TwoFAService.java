@@ -1,5 +1,6 @@
 package com.ab.auth.service;
 
+import com.ab.auth.annotation.Log;
 import com.ab.auth.client.EmailClient;
 import com.ab.auth.constants.AuthConstants;
 import com.ab.auth.enums.TwoFAType;
@@ -34,9 +35,8 @@ public class TwoFAService {
         emailClient = client;
     }
 
+    @Log
     public Boolean insertOTPViaTwoFA(String email, HttpServletRequest httpServletRequest, TwoFAType twoFAType) {
-        LOGGER.debug("Enter in TwoFAService.insertOTPViaTwoFA()");
-
         LOGGER.debug("Performing Validation");
         Set<ConstraintViolation<String>> violations = validator.validate(email);
         if (!violations.isEmpty()) {
@@ -64,9 +64,7 @@ public class TwoFAService {
             emailClient.sendEmail(prepareSendMailMap, globalHelper.generateTokenViaSubjectForRestCall(AuthConstants.AUTH_SERVICE_NAME));
         }
 //      Store OTP in cache
-        Boolean result = globalHelper.insertTwoFAOTP(otp, email, twoFAType);
-        LOGGER.debug("Exit in TwoFAService.insertOTPViaTwoFA()");
-        return result;
+        return globalHelper.insertTwoFAOTP(otp, email, twoFAType);
     }
 
     /**
@@ -78,6 +76,7 @@ public class TwoFAService {
      * @param twoFAType
      * @return
      */
+    @Log
     public Boolean validateOTPTwoFA(String email, String otp, HttpServletRequest httpServletRequest, TwoFAType twoFAType) {
         String twoFactorAuthOTP = globalHelper.getTwoFactorAuthOTP(email, twoFAType);
         if (twoFactorAuthOTP.isBlank() || (!twoFactorAuthOTP.equals(otp))) {

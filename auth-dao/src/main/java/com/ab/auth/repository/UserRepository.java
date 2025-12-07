@@ -16,4 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT email FROM auth_service_user_ms_tbl WHERE is_deleted = false;", nativeQuery = true)
     String[] findAllUsersEmails();
 
+    @Query(value = "SELECT count(*) FROM auth_service_user_ms_tbl WHERE is_deleted = false;", nativeQuery = true)
+    Integer findAllUsersCount();
+
+
 }
